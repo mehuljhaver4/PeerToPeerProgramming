@@ -137,7 +137,7 @@ public class peerProcess extends Thread {
                         StringBuilder handshakeMsg = new StringBuilder();
                         handshakeMsg.append(new String(Arrays.copyOfRange(inputData, 0, 28)));
                         handshakeMsg.append(receivedPeerId);
-//                        System.out.println(handshakeMsg);
+                        System.out.println(handshakeMsg);
                         peerSockets.put(peerId, socket);
                         new Communicate(socket, peerId).start();
                     }
@@ -165,7 +165,7 @@ public class peerProcess extends Thread {
                     int peerId = ByteBuffer.wrap(Arrays.copyOfRange(data, 28, 32)).getInt();
                     handshakeMsg.append(new String(Arrays.copyOfRange(data, 0, 28)));
                     handshakeMsg.append(peerId);
-//                    System.out.println(handshakeMsg);
+                    System.out.println(handshakeMsg);
 
                     //Sending handshake message to connected peer
                     Messages.sendMessage(socket, handShakeMessage);
@@ -216,6 +216,7 @@ public class peerProcess extends Thread {
                                             .copyOfRange(payload, index, index + 4)).getInt();
                                     bitFieldIndex += 1;
                                 }
+                                System.out.println(Arrays.toString(bitField));
                                 peers.get(peerId).setBitField(bitField);
                                 int parts = 0;
                                 for (int x : bitField) {
@@ -235,7 +236,7 @@ public class peerProcess extends Thread {
                             }
                             case INTERESTED -> {
                                 peers.get(peerId).setInterested(true);
-                                System.out.println("Received INTERESTED from - " + peerId);
+//                                System.out.println("Received INTERESTED from - " + peerId);
                             }
                             case NOTINTERESTED -> {
                                 peers.get(peerId).setInterested(false);
@@ -243,7 +244,7 @@ public class peerProcess extends Thread {
                                     peers.get(peerId).setChokedByPeer(true);
                                     Messages.sendMessage(socket, Messages.getChokeMessage());
                                 }
-                                System.out.println("Received NOTINTERESTED from " + peerId);
+//                                System.out.println("Received NOTINTERESTED from " + peerId);
                             }
                             case CHOKE -> {
                                 peers.get(peerId).setChokedByPeer(true);
@@ -257,7 +258,7 @@ public class peerProcess extends Thread {
                                 if (requestMessageMessage != null)
                                     Messages.sendMessage(socket, requestMessageMessage);
 
-                                System.out.println("Received UNCHOKE from " + peerId);
+//                                System.out.println("Received UNCHOKE from " + peerId);
                             }
                         }
                     }
