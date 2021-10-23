@@ -205,7 +205,7 @@ public class peerProcess extends Thread {
                         char messageType = (char) message[0];
 
                         switch (messageType) {
-                            case BITFIELD -> {
+                            case BITFIELD:
                                 byte[] payload;
                                 payload = Arrays.copyOfRange(message, 1, messageLength);
                                 int index = 0;
@@ -233,24 +233,27 @@ public class peerProcess extends Thread {
                                     Messages.sendMessage(socket, Messages.getInterestedMessage());
                                 else
                                     Messages.sendMessage(socket, Messages.getNotInterestedMessage());
-                            }
-                            case INTERESTED -> {
+                                break;
+                            case INTERESTED:
                                 peers.get(peerId).setInterested(true);
 //                                System.out.println("Received INTERESTED from - " + peerId);
-                            }
-                            case NOTINTERESTED -> {
+                                break;
+
+                            case NOTINTERESTED:
                                 peers.get(peerId).setInterested(false);
                                 if (!peers.get(peerId).isChokedByPeer()) {
                                     peers.get(peerId).setChokedByPeer(true);
                                     Messages.sendMessage(socket, Messages.getChokeMessage());
                                 }
 //                                System.out.println("Received NOTINTERESTED from " + peerId);
-                            }
-                            case CHOKE -> {
+                                break;
+
+                            case CHOKE:
                                 peers.get(peerId).setChokedByPeer(true);
 //                                System.out.println("Received CHOKE from " + peerId);
-                            }
-                            case UNCHOKE -> {
+                                break;
+
+                            case UNCHOKE:
                                 peers.get(peerId).setChokedByPeer(false);
                                 byte[] requestMessageMessage = Messages.getRequestMessage(thisPeer.getBitField()
                                         , peers.get(peerId).getBitField(), thisPeer.getBitField().length);
@@ -259,7 +262,7 @@ public class peerProcess extends Thread {
                                     Messages.sendMessage(socket, requestMessageMessage);
 
 //                                System.out.println("Received UNCHOKE from " + peerId);
-                            }
+                                break;
                         }
                     }
                 } catch (Exception e) {
