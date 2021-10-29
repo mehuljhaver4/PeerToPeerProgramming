@@ -2,7 +2,6 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -318,8 +317,7 @@ public class peerProcess extends Thread {
             }
             Random r = new Random();
             if (indices.size() > 0) {
-                int index = indices.get(Math.abs(r.nextInt() % indices.size()));
-                return index;
+                return indices.get(Math.abs(r.nextInt() % indices.size()));
             }
             return -1;
         }
@@ -470,179 +468,5 @@ public class peerProcess extends Thread {
                 }
             }
         }
-    }
-}
-
-class CommonProperties {
-    private int preferredNeighbors;
-    private int unchokingInterval;
-    private int optimisticUnchokingInterval;
-    private String fileName;
-    private int fileSize;
-    private int pieceSize;
-
-    public int getPreferredNeighbors() {
-        return preferredNeighbors;
-    }
-
-    public void setPreferredNeighbors(int preferredNeighbors) {
-        this.preferredNeighbors = preferredNeighbors;
-    }
-
-    public int getUnchokingInterval() {
-        return unchokingInterval;
-    }
-
-    public void setUnchokingInterval(int unchokingInterval) {
-        this.unchokingInterval = unchokingInterval;
-    }
-
-    public int getOptimisticUnchokingInterval() {
-        return optimisticUnchokingInterval;
-    }
-
-    public void setOptimisticUnchokingInterval(int optimisticUnchokingInterval) {
-        this.optimisticUnchokingInterval = optimisticUnchokingInterval;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public int getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(int fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public int getPieceSize() {
-        return pieceSize;
-    }
-
-    public void setPieceSize(int pieceSize) {
-        this.pieceSize = pieceSize;
-    }
-
-    public void setCommonProperties() {
-        try {
-            BufferedReader commonInfo =
-                    new BufferedReader(new FileReader("Config Files/Common.cfg"));
-
-            Object[] commonLines = commonInfo.lines().toArray();
-            this.setPreferredNeighbors(Integer.parseInt(commonLines[0].toString().split(" ")[1]));
-            this.setUnchokingInterval(Integer.parseInt(commonLines[1].toString().split(" ")[1]));
-            this.setOptimisticUnchokingInterval(Integer.parseInt(commonLines[2].toString().split(" ")[1]));
-            this.setFileName(commonLines[3].toString().split(" ")[1]);
-            this.setFileSize(Integer.parseInt(commonLines[4].toString().split(" ")[1]));
-            this.setPieceSize(Integer.parseInt(commonLines[5].toString().split(" ")[1]));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-}
-
-class PeerInfo {
-    private int peerId;
-    private String hostName;
-    private int portNumber;
-    private boolean hasFile;
-    private int[] bitField;
-    private int numberOfPieces = 0;
-    private boolean isChoked = true;
-    private boolean isInterested = false;
-    private double downloadRate = 0;
-
-    public PeerInfo(int peerId, String hostName, int portNumber, boolean hasFile) {
-        this.peerId = peerId;
-        this.hostName = hostName;
-        this.portNumber = portNumber;
-        this.hasFile = hasFile;
-    }
-
-    public int getPeerId() {
-        return peerId;
-    }
-
-    public void setPeerId(int peerId) {
-        this.peerId = peerId;
-    }
-
-    public String getHostName() {
-        return hostName;
-    }
-
-    public void setHostName(String hostName) {
-        this.hostName = hostName;
-    }
-
-    public int getPortNumber() {
-        return portNumber;
-    }
-
-    public void setPortNumber(int portNumber) {
-        this.portNumber = portNumber;
-    }
-
-    public boolean hasFile() {
-        return hasFile;
-    }
-
-    public void setHasFile(boolean hasFile) {
-        this.hasFile = hasFile;
-    }
-
-    public int[] getBitField() {
-        return bitField;
-    }
-
-    public void setBitField(int[] bitField) {
-        this.bitField = bitField;
-    }
-
-    public void updateBitField(int index) {
-        this.bitField[index] = 1;
-    }
-
-    public int getNumberOfPieces() {
-        return numberOfPieces;
-    }
-
-    public void updateNumberOfPieces() {
-
-        //Bitfield length is the total number of pieces in the file. If total number of downloaded pieces is equal to
-        // bitField.length it means that the peer has the complete file.
-        this.numberOfPieces += 1;
-        if (this.numberOfPieces == bitField.length)
-            this.hasFile = true;
-    }
-
-    public boolean isChoked() {
-        return isChoked;
-    }
-
-    public void setChoked(boolean choked) {
-        this.isChoked = choked;
-    }
-
-    public boolean isInterested() {
-        return isInterested;
-    }
-
-    public void setInterested(boolean interested) {
-        isInterested = interested;
-    }
-
-    public double getDownloadRate() {
-        return downloadRate;
-    }
-
-    public void setDownloadRate(double downloadRate) {
-        this.downloadRate = downloadRate;
     }
 }
