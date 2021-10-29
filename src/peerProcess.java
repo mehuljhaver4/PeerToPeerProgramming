@@ -332,6 +332,7 @@ public class peerProcess extends Thread {
                     DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
                     byte[] bitFieldMessage = Messages.getBitFieldMessage(thisPeer.getBitField());
                     Messages.sendMessage(socket, bitFieldMessage);
+
                     while (peersWithCompleteFile < peers.size()) {
                         int messageLengthField = dataInputStream.readInt();
                         byte[] input = new byte[messageLengthField];

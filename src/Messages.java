@@ -13,48 +13,49 @@ public class Messages {
     private static final char REQUEST = '6';
     private static final char PIECE = '7';
 
-    public static byte[] createMessage(int len, char type, byte[] payload) {
-        byte[] message;
-        byte[] length;
+    public static byte[] createFinalMessage(char type, byte[] payload) {
+        byte[] finalMessage;
         byte messageType = (byte) type;
+        int payloadLength = payload.length;
+        int messageTypeLength = 1;
+        int messageLength = payloadLength + messageTypeLength;
+
         int index;
         switch (type) {
             case CHOKE, UNCHOKE, INTERESTED, NOTINTERESTED:
-                message = new byte[len + 4];
-                length = ByteBuffer.allocate(4).putInt(len).array();
+                finalMessage = new byte[messageLength + 4];
                 index = 0;
-                for (byte x : length) {
-                    message[index] = x;
-                    index++;
+                for (byte b : ByteBuffer.allocate(4).putInt(messageLength).array()) {
+                    finalMessage[index] = b;
+                    index += 1;
                 }
-                message[index] = messageType;
+                finalMessage[index] = messageType;
                 break;
             case HAVE, BITFIELD, REQUEST, PIECE:
-                message = new byte[len + 4];
-                length = ByteBuffer.allocate(4).putInt(len).array();
+                finalMessage = new byte[messageLength + 4];
                 index = 0;
-                for (byte x : length) {
-                    message[index] = x;
-                    index++;
+                for (byte b : ByteBuffer.allocate(4).putInt(messageLength).array()) {
+                    finalMessage[index] = b;
+                    index += 1;
                 }
-                message[index++] = messageType;
-                for (byte x : payload) {
-                    message[index] = x;
-                    index++;
+                finalMessage[index++] = messageType;
+                for (byte b : payload) {
+                    finalMessage[index] = b;
+                    index += 1;
                 }
                 break;
             default:
-                message = new byte[0];
+                finalMessage = new byte[0];
                 break;
         }
-        return message;
+        return finalMessage;
     }
 
     public static byte[] getHandshakeMessage(int peerId) {
         byte[] handShakeMessage = new byte[32];
         byte[] header = "P2PFILESHARINGPROJ".getBytes(StandardCharsets.UTF_8);
         byte[] zeroBits = "0000000000".getBytes(StandardCharsets.UTF_8);
-        byte[] thisPeer = ByteBuffer.allocate(4).putInt(peerId).array();
+        byte[] thisPeerId = ByteBuffer.allocate(4).putInt(peerId).array();
 
         int index = 0;
         for (var headerByte : header) {
@@ -67,7 +68,7 @@ public class Messages {
             index += 1;
         }
 
-        for (var peerIdByte : thisPeer) {
+        for (var peerIdByte : thisPeerId) {
             handShakeMessage[index] = peerIdByte;
             index += 1;
         }
@@ -75,8 +76,8 @@ public class Messages {
     }
 
     public static byte[] getBitFieldMessage(int[] bitField) {
-        int length = 1 + (4 * bitField.length);
-        byte[] payload = new byte[length - 1];
+        int payloadLength = 4 * bitField.length;
+        byte[] payload = new byte[payloadLength];
         int index = 0;
         for (int bit : bitField) {
             byte[] bitBytes = ByteBuffer.allocate(4).putInt(bit).array();
@@ -85,48 +86,50 @@ public class Messages {
                 index++;
             }
         }
-        return createMessage(length, BITFIELD, payload);
+        return createFinalMessage(BITFIELD, payload);
     }
 
     public static byte[] getChokeMessage() {
-        return createMessage(1, CHOKE, null);
+        return createFinalMessage(CHOKE, new byte[0]);
     }
 
     public static byte[] getUnchokeMessage() {
-        return createMessage(1, UNCHOKE, null);
+        return createFinalMessage(UNCHOKE, new byte[0]);
     }
 
     public static byte[] getInterestedMessage() {
-        return createMessage(1, INTERESTED, null);
+        return createFinalMessage(INTERESTED, new byte[0]);
     }
 
     public static byte[] getNotInterestedMessage() {
-        return createMessage(1, NOTINTERESTED, null);
+        return createFinalMessage(NOTINTERESTED, new byte[0]);
     }
 
     public static byte[] getRequestMessage(int pieceIndex) {
         byte[] payload = ByteBuffer.allocate(4).putInt(pieceIndex).array();
-        return createMessage(5, REQUEST, payload);
+        return createFinalMessage(REQUEST, payload);
     }
 
     public static byte[] getPieceMessage(int pieceIndex, byte[] piece) {
-        byte[] payload = new byte[4 + piece.length];
-        int counter = 0;
-        byte[] indexBytes = ByteBuffer.allocate(4).putInt(pieceIndex).array();
-        for (byte bit : indexBytes) {
-            payload[counter] = bit;
-            counter++;
+        int pieceIndexLength = 4;
+        byte[] payload = new byte[pieceIndexLength + piece.length];
+
+        byte[] pieceIndexBytes = ByteBuffer.allocate(4).putInt(pieceIndex).array();
+        int index = 0;
+        for (byte b : pieceIndexBytes) {
+            payload[index] = b;
+            index += 1;
         }
-        for (byte bit : piece) {
-            payload[counter] = bit;
-            counter++;
+        for (byte b : piece) {
+            payload[index] = b;
+            index += 1;
         }
-        return createMessage((5 + piece.length), PIECE, payload);
+        return createFinalMessage(PIECE, payload);
     }
 
     public static byte[] getHaveMessage(int pieceIndex) {
         byte[] payload = ByteBuffer.allocate(4).putInt(pieceIndex).array();
-        return createMessage(5, HAVE, payload);
+        return createFinalMessage(HAVE, payload);
     }
 
     public static void sendMessage(Socket socket, byte[] data) {

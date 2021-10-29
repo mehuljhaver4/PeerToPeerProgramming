@@ -16,28 +16,12 @@ class PeerInfo {
         this.hasFile = hasFile;
     }
 
-    public int getPeerId() {
-        return peerId;
-    }
-
-    public void setPeerId(int peerId) {
-        this.peerId = peerId;
-    }
-
     public String getHostName() {
         return hostName;
     }
 
-    public void setHostName(String hostName) {
-        this.hostName = hostName;
-    }
-
     public int getPortNumber() {
         return portNumber;
-    }
-
-    public void setPortNumber(int portNumber) {
-        this.portNumber = portNumber;
     }
 
     public boolean hasFile() {
