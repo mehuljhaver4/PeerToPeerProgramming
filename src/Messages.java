@@ -4,15 +4,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 public class Messages {
-    private static final char CHOKE = '0';
-    private static final char UNCHOKE = '1';
-    private static final char INTERESTED = '2';
-    private static final char NOTINTERESTED = '3';
-    private static final char HAVE = '4';
-    private static final char BITFIELD = '5';
-    private static final char REQUEST = '6';
-    private static final char PIECE = '7';
-
     public static byte[] createFinalMessage(char type, byte[] payload) {
         byte[] finalMessage;
         byte messageType = (byte) type;
@@ -22,7 +13,7 @@ public class Messages {
 
         int index;
         switch (type) {
-            case CHOKE, UNCHOKE, INTERESTED, NOTINTERESTED:
+            case MessageTypes.CHOKE, MessageTypes.UNCHOKE, MessageTypes.INTERESTED, MessageTypes.NOTINTERESTED:
                 finalMessage = new byte[messageLength + 4];
                 index = 0;
                 for (byte b : ByteBuffer.allocate(4).putInt(messageLength).array()) {
@@ -31,7 +22,7 @@ public class Messages {
                 }
                 finalMessage[index] = messageType;
                 break;
-            case HAVE, BITFIELD, REQUEST, PIECE:
+            case MessageTypes.HAVE, MessageTypes.BITFIELD, MessageTypes.REQUEST, MessageTypes.PIECE:
                 finalMessage = new byte[messageLength + 4];
                 index = 0;
                 for (byte b : ByteBuffer.allocate(4).putInt(messageLength).array()) {
@@ -86,28 +77,28 @@ public class Messages {
                 index++;
             }
         }
-        return createFinalMessage(BITFIELD, payload);
+        return createFinalMessage(MessageTypes.BITFIELD, payload);
     }
 
     public static byte[] getChokeMessage() {
-        return createFinalMessage(CHOKE, new byte[0]);
+        return createFinalMessage(MessageTypes.CHOKE, new byte[0]);
     }
 
     public static byte[] getUnchokeMessage() {
-        return createFinalMessage(UNCHOKE, new byte[0]);
+        return createFinalMessage(MessageTypes.UNCHOKE, new byte[0]);
     }
 
     public static byte[] getInterestedMessage() {
-        return createFinalMessage(INTERESTED, new byte[0]);
+        return createFinalMessage(MessageTypes.INTERESTED, new byte[0]);
     }
 
     public static byte[] getNotInterestedMessage() {
-        return createFinalMessage(NOTINTERESTED, new byte[0]);
+        return createFinalMessage(MessageTypes.NOTINTERESTED, new byte[0]);
     }
 
     public static byte[] getRequestMessage(int pieceIndex) {
         byte[] payload = ByteBuffer.allocate(4).putInt(pieceIndex).array();
-        return createFinalMessage(REQUEST, payload);
+        return createFinalMessage(MessageTypes.REQUEST, payload);
     }
 
     public static byte[] getPieceMessage(int pieceIndex, byte[] piece) {
@@ -124,12 +115,12 @@ public class Messages {
             payload[index] = b;
             index += 1;
         }
-        return createFinalMessage(PIECE, payload);
+        return createFinalMessage(MessageTypes.PIECE, payload);
     }
 
     public static byte[] getHaveMessage(int pieceIndex) {
         byte[] payload = ByteBuffer.allocate(4).putInt(pieceIndex).array();
-        return createFinalMessage(HAVE, payload);
+        return createFinalMessage(MessageTypes.HAVE, payload);
     }
 
     public static void sendMessage(Socket socket, byte[] data) {

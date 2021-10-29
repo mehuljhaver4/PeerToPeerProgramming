@@ -14,14 +14,6 @@ public class peerProcess extends Thread {
     private static CommonProperties commonProperties;
     private static LinkedHashMap<Integer, PeerInfo> peers;
     private static ConcurrentHashMap<Integer, Socket> peerSockets;
-    private static final char CHOKE = '0';
-    private static final char UNCHOKE = '1';
-    private static final char INTERESTED = '2';
-    private static final char NOTINTERESTED = '3';
-    private static final char HAVE = '4';
-    private static final char BITFIELD = '5';
-    private static final char REQUEST = '6';
-    private static final char PIECE = '7';
 
     public static void main(String[] args) {
         try {
@@ -58,19 +50,19 @@ public class peerProcess extends Thread {
                 byte[] fileBytes = new byte[fileSize];
                 file.read(fileBytes);
                 file.close();
-                int part = 0;
+                int filePart = 0;
 
                 //Assigning file pieces to filePieces
                 for (int counter = 0; counter < fileSize; counter += pieceSize) {
 
                     //Fill the filePieces for the part bytes from range counter to counter + pieceSize
                     if (counter + pieceSize <= fileSize)
-                        filePieces[part] = Arrays.copyOfRange(fileBytes, counter, counter + pieceSize);
+                        filePieces[filePart] = Arrays.copyOfRange(fileBytes, counter, counter + pieceSize);
 
                         //Else will be used for the final few bytes left which is less than the piece size
                     else
-                        filePieces[part] = Arrays.copyOfRange(fileBytes, counter, fileSize);
-                    part += 1;
+                        filePieces[filePart] = Arrays.copyOfRange(fileBytes, counter, fileSize);
+                    filePart += 1;
                     thisPeer.updateNumberOfPieces();
                 }
             } else {
@@ -351,11 +343,11 @@ public class peerProcess extends Thread {
                         int pieceIndex;
                         int bits;
                         switch (messageType) {
-                            case CHOKE:
+                            case MessageTypes.CHOKE:
                                 peers.get(peerId).setChoked(true);
                                 System.out.println("Received CHOKE from " + peerId);
                                 break;
-                            case UNCHOKE:
+                            case MessageTypes.UNCHOKE:
                                 peers.get(peerId).setChoked(false);
                                 pieceIndex = getPieceIndex(thisPeer.getBitField(), peers.get(peerId).getBitField()
                                         , thisPeer.getBitField().length);
@@ -363,11 +355,11 @@ public class peerProcess extends Thread {
                                 if (pieceIndex != -1)
                                     Messages.sendMessage(socket, Messages.getRequestMessage(pieceIndex));
                                 break;
-                            case INTERESTED:
+                            case MessageTypes.INTERESTED:
                                 peers.get(peerId).setInterested(true);
                                 System.out.println("Received INTERESTED from - " + peerId);
                                 break;
-                            case NOTINTERESTED:
+                            case MessageTypes.NOTINTERESTED:
                                 System.out.println("Received NOTINTERESTED from " + peerId);
                                 peers.get(peerId).setInterested(false);
                                 if (!peers.get(peerId).isChoked()) {
@@ -375,7 +367,7 @@ public class peerProcess extends Thread {
                                     Messages.sendMessage(socket, Messages.getChokeMessage());
                                 }
                                 break;
-                            case HAVE:
+                            case MessageTypes.HAVE:
                                 System.out.println("Received HAVE from " + peerId);
                                 pieceIndex = ByteBuffer.wrap(message).getInt();
                                 peers.get(peerId).updateBitField(pieceIndex);
@@ -394,7 +386,7 @@ public class peerProcess extends Thread {
                                 else
                                     Messages.sendMessage(socket, Messages.getNotInterestedMessage());
                                 break;
-                            case BITFIELD:
+                            case MessageTypes.BITFIELD:
                                 int[] bitField = new int[message.length / 4];
                                 index = 0;
                                 for (int i = 0; i < message.length; i += 4) {
@@ -421,14 +413,14 @@ public class peerProcess extends Thread {
                                 else
                                     Messages.sendMessage(socket, Messages.getNotInterestedMessage());
                                 break;
-                            case REQUEST:
+                            case MessageTypes.REQUEST:
                                 pieceIndex = ByteBuffer.wrap(message).getInt();
                                 Messages.sendMessage(socket, Messages.getPieceMessage(pieceIndex
                                         , filePieces[pieceIndex]));
 
                                 System.out.println("Received REQUEST from " + peerId + " for piece " + ByteBuffer.wrap(message).getInt());
                                 break;
-                            case PIECE:
+                            case MessageTypes.PIECE:
                                 pieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(message, 0, 4)).getInt();
                                 System.out.println("Received PIECE" + pieceIndex + " from " + peerId);
                                 index = 0;
