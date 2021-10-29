@@ -19,7 +19,7 @@ public class Messages {
         byte messageType = (byte) type;
         int index;
         switch (type) {
-            case CHOKE, UNCHOKE, INTERESTED, NOTINTERESTED -> {
+            case CHOKE, UNCHOKE, INTERESTED, NOTINTERESTED:
                 message = new byte[len + 4];
                 length = ByteBuffer.allocate(4).putInt(len).array();
                 index = 0;
@@ -28,8 +28,8 @@ public class Messages {
                     index++;
                 }
                 message[index] = messageType;
-            }
-            case HAVE, BITFIELD, REQUEST, PIECE -> {
+                break;
+            case HAVE, BITFIELD, REQUEST, PIECE:
                 message = new byte[len + 4];
                 length = ByteBuffer.allocate(4).putInt(len).array();
                 index = 0;
@@ -42,10 +42,10 @@ public class Messages {
                     message[index] = x;
                     index++;
                 }
-            }
-            default -> {
+                break;
+            default:
                 message = new byte[0];
-            }
+                break;
         }
         return message;
     }

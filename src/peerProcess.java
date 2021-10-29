@@ -352,31 +352,31 @@ public class peerProcess extends Thread {
                         int pieceIndex;
                         int bits;
                         switch (messageType) {
-                            case CHOKE -> {
+                            case CHOKE:
                                 peers.get(peerId).setChoked(true);
                                 System.out.println("Received CHOKE from " + peerId);
-                            }
-                            case UNCHOKE -> {
+                                break;
+                            case UNCHOKE:
                                 peers.get(peerId).setChoked(false);
                                 pieceIndex = getPieceIndex(thisPeer.getBitField(), peers.get(peerId).getBitField()
                                         , thisPeer.getBitField().length);
 
                                 if (pieceIndex != -1)
                                     Messages.sendMessage(socket, Messages.getRequestMessage(pieceIndex));
-                            }
-                            case INTERESTED -> {
+                                break;
+                            case INTERESTED:
                                 peers.get(peerId).setInterested(true);
                                 System.out.println("Received INTERESTED from - " + peerId);
-                            }
-                            case NOTINTERESTED -> {
+                                break;
+                            case NOTINTERESTED:
                                 System.out.println("Received NOTINTERESTED from " + peerId);
                                 peers.get(peerId).setInterested(false);
                                 if (!peers.get(peerId).isChoked()) {
                                     peers.get(peerId).setChoked(true);
                                     Messages.sendMessage(socket, Messages.getChokeMessage());
                                 }
-                            }
-                            case HAVE -> {
+                                break;
+                            case HAVE:
                                 System.out.println("Received HAVE from " + peerId);
                                 pieceIndex = ByteBuffer.wrap(message).getInt();
                                 peers.get(peerId).updateBitField(pieceIndex);
@@ -394,8 +394,8 @@ public class peerProcess extends Thread {
                                     Messages.sendMessage(socket, Messages.getInterestedMessage());
                                 else
                                     Messages.sendMessage(socket, Messages.getNotInterestedMessage());
-                            }
-                            case BITFIELD -> {
+                                break;
+                            case BITFIELD:
                                 int[] bitField = new int[message.length / 4];
                                 index = 0;
                                 for (int i = 0; i < message.length; i += 4) {
@@ -421,15 +421,15 @@ public class peerProcess extends Thread {
                                     Messages.sendMessage(socket, Messages.getInterestedMessage());
                                 else
                                     Messages.sendMessage(socket, Messages.getNotInterestedMessage());
-                            }
-                            case REQUEST -> {
+                                break;
+                            case REQUEST:
                                 pieceIndex = ByteBuffer.wrap(message).getInt();
                                 Messages.sendMessage(socket, Messages.getPieceMessage(pieceIndex
                                         , filePieces[pieceIndex]));
 
                                 System.out.println("Received REQUEST from " + peerId + " for piece " + ByteBuffer.wrap(message).getInt());
-                            }
-                            case PIECE -> {
+                                break;
+                            case PIECE:
                                 pieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(message, 0, 4)).getInt();
                                 System.out.println("Received PIECE" + pieceIndex + " from " + peerId);
                                 index = 0;
@@ -460,9 +460,7 @@ public class peerProcess extends Thread {
                                 for (int peerId : peerSockets.keySet()) {
                                     Messages.sendMessage(peerSockets.get(peerId), Messages.getHaveMessage(pieceIndex));
                                 }
-                            }
-                            default -> {
-                            }
+                                break;
                         }
                     }
                     Thread.sleep(5000);
