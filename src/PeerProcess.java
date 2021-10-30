@@ -5,70 +5,33 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class peerProcess extends Thread {
+public class PeerProcess {
     private static int peersWithCompleteFile = 0;
     private static int thisPeerId;
     private static int numberOfPieces;
-    private static byte[][] filePieces;
-    private static PeerInfo thisPeer;
+    private static Peer thisPeer;
     private static CommonProperties commonProperties;
-    private static LinkedHashMap<Integer, PeerInfo> peers;
+    private static LinkedHashMap<Integer, Peer> peers;
     private static ConcurrentHashMap<Integer, Socket> peerSockets;
 
     public static void main(String[] args) {
         try {
             thisPeerId = Integer.parseInt(args[0]);
             System.out.println("This peer - " + thisPeerId);
-            peers = new LinkedHashMap<>();
             peerSockets = new ConcurrentHashMap<>();
 
-            //Read PeerInfo.cfg and set properties for all peers
-            setPeerInfo(peers);
+            //Setup peer specific info
+            peers = Configuration.getAllPeersInfo();
+
+            //Setup common info
+            commonProperties = Configuration.getCommonProperties();
+            numberOfPieces = commonProperties.getNumberOfPieces();
+
+            //Setup file specific info for this peer
+            Configuration.setThisPeerFileInfo(peers, thisPeerId, commonProperties);
             thisPeer = peers.get(thisPeerId);
-
-            //Read Common.cfg and set the common properties
-            commonProperties = new CommonProperties();
-            commonProperties.setCommonProperties();
-            int fileSize = commonProperties.getFileSize();
-            int pieceSize = commonProperties.getPieceSize();
-            numberOfPieces = (int) Math.ceil((double) fileSize / pieceSize);
-            int[] bitField = new int[numberOfPieces];
-            filePieces = new byte[numberOfPieces][];
-
-            //Set pieces of file if this peer has the full file
-            if (thisPeer.hasFile()) {
-
-                //Bitfield will have all 1s if this peer has the full file
-                Arrays.fill(bitField, 1);
-                thisPeer.setBitField(bitField);
-
-                //Increment this variable by 1 so that total peers with the full file can be tracked
+            if (thisPeer.hasFile())
                 peersWithCompleteFile += 1;
-
-                //Read the file using stream and assign to fileBytes
-                BufferedInputStream file = new BufferedInputStream(new FileInputStream(commonProperties.getFileName()));
-                byte[] fileBytes = new byte[fileSize];
-                file.read(fileBytes);
-                file.close();
-                int filePart = 0;
-
-                //Assigning file pieces to filePieces
-                for (int counter = 0; counter < fileSize; counter += pieceSize) {
-
-                    //Fill the filePieces for the part bytes from range counter to counter + pieceSize
-                    if (counter + pieceSize <= fileSize)
-                        filePieces[filePart] = Arrays.copyOfRange(fileBytes, counter, counter + pieceSize);
-
-                        //Else will be used for the final few bytes left which is less than the piece size
-                    else
-                        filePieces[filePart] = Arrays.copyOfRange(fileBytes, counter, fileSize);
-                    filePart += 1;
-                    thisPeer.updateNumberOfPieces();
-                }
-            } else {
-                Arrays.fill(bitField, 0);
-                thisPeer.setBitField(bitField);
-            }
 
             //Starting all threads to start the protocol
             ConnectToPeers connectToPeers = new ConnectToPeers();
@@ -77,25 +40,7 @@ public class peerProcess extends Thread {
             connectToPeers.start();
             acceptConnectionsFromPeers.start();
             unchokePeers.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    static void setPeerInfo(HashMap<Integer, PeerInfo> peers) {
-        try {
-            BufferedReader peerInfo =
-                    new BufferedReader(new FileReader("Config Files/PeerInfo.cfg"));
-            Object[] peerInfoLines = peerInfo.lines().toArray();
-            for (var peerInfoLine : peerInfoLines) {
-                int peerId = Integer.parseInt(peerInfoLine.toString().split(" ")[0]);
-                String hostName = peerInfoLine.toString().split(" ")[1];
-                int portNumber = Integer.parseInt(peerInfoLine.toString().split(" ")[2]);
-                boolean hasFile = Integer.parseInt(peerInfoLine.toString().split(" ")[3]) == 1;
-                PeerInfo peer = new PeerInfo(peerId, hostName, portNumber, hasFile);
-                peers.put(peerId, peer);
-            }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -280,19 +225,18 @@ public class peerProcess extends Thread {
                 peersWithCompleteFile += 1;
                 thisPeer.setHasFile(true);
                 for (int piece = 0; piece < numberOfPieces; piece++) {
-                    for (int i = 0; i < filePieces[piece].length; i++) {
-                        mergedFile[index] = filePieces[piece][i];
+                    for (int i = 0; i < thisPeer.getFilePieces()[piece].length; i++) {
+                        mergedFile[index] = thisPeer.getFilePieces()[piece][i];
                         index += 1;
                     }
                 }
                 try {
-                    FileOutputStream file = new FileOutputStream(thisPeerId + commonProperties.getFileName());
-                    BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(file);
+                    FileOutputStream fileOutputStream = new FileOutputStream(thisPeerId + commonProperties.getFileName());
+                    BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
                     bufferedOutputStream.write(mergedFile);
                     bufferedOutputStream.close();
-                    file.close();
+                    fileOutputStream.close();
                     System.out.println("File downloaded");
-                    thisPeer.setHasFile(true);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -416,7 +360,7 @@ public class peerProcess extends Thread {
                             case MessageTypes.REQUEST:
                                 pieceIndex = ByteBuffer.wrap(message).getInt();
                                 Messages.sendMessage(socket, Messages.getPieceMessage(pieceIndex
-                                        , filePieces[pieceIndex]));
+                                        , thisPeer.getFilePieces()[pieceIndex]));
 
                                 System.out.println("Received REQUEST from " + peerId + " for piece " + ByteBuffer.wrap(message).getInt());
                                 break;
@@ -424,9 +368,9 @@ public class peerProcess extends Thread {
                                 pieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(message, 0, 4)).getInt();
                                 System.out.println("Received PIECE" + pieceIndex + " from " + peerId);
                                 index = 0;
-                                filePieces[pieceIndex] = new byte[message.length - 4];
+                                thisPeer.getFilePieces()[pieceIndex] = new byte[message.length - 4];
                                 for (int i = 4; i < message.length; i++) {
-                                    filePieces[pieceIndex][index] = message[i];
+                                    thisPeer.getFilePieces()[pieceIndex][index] = message[i];
                                     index++;
                                 }
                                 thisPeer.updateBitField(pieceIndex);

@@ -58,20 +58,7 @@ class CommonProperties {
         this.pieceSize = pieceSize;
     }
 
-    public void setCommonProperties() {
-        try {
-            BufferedReader commonInfo =
-                    new BufferedReader(new FileReader("Config Files/Common.cfg"));
-
-            Object[] commonLines = commonInfo.lines().toArray();
-            this.setPreferredNeighbors(Integer.parseInt(commonLines[0].toString().split(" ")[1]));
-            this.setUnchokingInterval(Integer.parseInt(commonLines[1].toString().split(" ")[1]));
-            this.setOptimisticUnchokingInterval(Integer.parseInt(commonLines[2].toString().split(" ")[1]));
-            this.setFileName(commonLines[3].toString().split(" ")[1]);
-            this.setFileSize(Integer.parseInt(commonLines[4].toString().split(" ")[1]));
-            this.setPieceSize(Integer.parseInt(commonLines[5].toString().split(" ")[1]));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public int getNumberOfPieces() {
+        return (int) Math.ceil((double) fileSize / pieceSize);
     }
 }

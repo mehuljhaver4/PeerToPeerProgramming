@@ -1,4 +1,4 @@
-class PeerInfo {
+class Peer {
     private int peerId;
     private String hostName;
     private int portNumber;
@@ -8,8 +8,9 @@ class PeerInfo {
     private boolean isChoked = true;
     private boolean isInterested = false;
     private double downloadRate = 0;
+    private byte[][] filePieces;
 
-    public PeerInfo(int peerId, String hostName, int portNumber, boolean hasFile) {
+    public Peer(int peerId, String hostName, int portNumber, boolean hasFile) {
         this.peerId = peerId;
         this.hostName = hostName;
         this.portNumber = portNumber;
@@ -79,5 +80,13 @@ class PeerInfo {
 
     public void setDownloadRate(double downloadRate) {
         this.downloadRate = downloadRate;
+    }
+
+    public byte[][] getFilePieces() {
+        return filePieces;
+    }
+
+    public void setFilePieces(byte[][] filePieces) {
+        this.filePieces = filePieces;
     }
 }
