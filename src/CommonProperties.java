@@ -1,7 +1,3 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-
 class CommonProperties {
     private int preferredNeighbors;
     private int unchokingInterval;
