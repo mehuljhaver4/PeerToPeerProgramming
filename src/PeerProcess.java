@@ -2,6 +2,8 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,6 +24,11 @@ public class PeerProcess {
 
             //Setup peer specific info
             peers = Configuration.getAllPeersInfo();
+
+            //Create directories if they don't exist
+            for (int peerId : peers.keySet()) {
+                Files.createDirectories(Paths.get("peer_" + peerId));
+            }
 
             //Setup common info
             commonProperties = Configuration.getCommonProperties();
@@ -252,7 +259,8 @@ public class PeerProcess {
                     }
                 }
                 try {
-                    FileOutputStream fileOutputStream = new FileOutputStream(thisPeerId + commonProperties.getFileName());
+                    FileOutputStream fileOutputStream = new FileOutputStream("peer_" + thisPeerId + File.separatorChar
+                            + commonProperties.getFileName());
                     BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
                     bufferedOutputStream.write(mergedFile);
                     bufferedOutputStream.close();

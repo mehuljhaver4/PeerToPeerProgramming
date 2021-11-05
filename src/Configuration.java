@@ -40,7 +40,8 @@ public class Configuration {
                 thisPeer.setBitField(bitField);
 
                 //Read the file using stream and assign to fileBytes
-                BufferedInputStream file = new BufferedInputStream(new FileInputStream(commonProperties.getFileName()));
+                BufferedInputStream file = new BufferedInputStream(new FileInputStream("peer_" + thisPeerId + File.separatorChar
+                        + commonProperties.getFileName()));
                 byte[] fileBytes = new byte[fileSize];
                 file.read(fileBytes);
                 file.close();
