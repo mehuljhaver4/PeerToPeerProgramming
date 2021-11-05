@@ -37,9 +37,12 @@ public class PeerProcess {
             ConnectToPeers connectToPeers = new ConnectToPeers();
             AcceptConnectionsFromPeers acceptConnectionsFromPeers = new AcceptConnectionsFromPeers();
             UnchokePeers unchokePeers = new UnchokePeers();
+            OptimisticallyUnchokePeers optimisticallyUnchokePeers = new OptimisticallyUnchokePeers();
+
             connectToPeers.start();
             acceptConnectionsFromPeers.start();
             unchokePeers.start();
+            optimisticallyUnchokePeers.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -125,39 +128,29 @@ public class PeerProcess {
             try {
                 while (peersWithCompleteFile < peers.size()) {
                     int preferredNeighbors = commonProperties.getPreferredNeighbors();
-                    ArrayList<Integer> interestedPeers;
-                    ArrayList<Integer> preferredPeers;
+                    ArrayList<Integer> interestedPeers = new ArrayList<>();
+                    ArrayList<Integer> preferredPeers = new ArrayList<>();
 
-                    if (thisPeer.hasFile()) {
-                        interestedPeers = new ArrayList<>();
-                        preferredPeers = new ArrayList<>();
-                        for (int peerId : peerSockets.keySet()) {
-                            if (peers.get(peerId).isInterested())
-                                interestedPeers.add(peerId);
-                        }
-                        if (interestedPeers.size() <= preferredNeighbors) {
-                            preferredPeers.addAll(interestedPeers);
-                        } else {
+                    for (int peerId : peerSockets.keySet()) {
+                        if (peers.get(peerId).isInterested())
+                            interestedPeers.add(peerId);
+                    }
+
+                    if (interestedPeers.size() <= preferredNeighbors)
+                        preferredPeers.addAll(interestedPeers);
+
+                    else {
+                        if (thisPeer.hasFile()) {
                             Random random = new Random();
-                            int peerIndex;
+                            int randomPeerIndex;
                             for (int i = 0; i < preferredNeighbors; i++) {
-                                peerIndex = random.nextInt(interestedPeers.size());
-                                if (!preferredPeers.contains(peerIndex)) {
-                                    int randomPeer = interestedPeers.get(peerIndex);
+                                randomPeerIndex = random.nextInt(interestedPeers.size());
+                                if (!preferredPeers.contains(randomPeerIndex)) {
+                                    int randomPeer = interestedPeers.get(randomPeerIndex);
                                     preferredPeers.add(randomPeer);
-                                    interestedPeers.remove(peerIndex);
+                                    interestedPeers.remove(randomPeerIndex);
                                 }
                             }
-                        }
-                    } else {
-                        interestedPeers = new ArrayList<>();
-                        preferredPeers = new ArrayList<>();
-                        for (int peerId : peerSockets.keySet()) {
-                            if (peers.get(peerId).isInterested())
-                                interestedPeers.add(peerId);
-                        }
-                        if (interestedPeers.size() <= preferredNeighbors) {
-                            preferredPeers.addAll(interestedPeers);
                         } else {
                             for (int i = 0; i < preferredNeighbors; i++) {
                                 int maxDownloadRatePeer = interestedPeers.get(0);
@@ -188,6 +181,34 @@ public class PeerProcess {
                     }
 
                     Thread.sleep(commonProperties.getUnchokingInterval() * 1000L);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class OptimisticallyUnchokePeers extends Thread {
+        @Override
+        public void run() {
+            try {
+                while (peersWithCompleteFile < peers.size()) {
+                    ArrayList<Integer> interestedPeers = new ArrayList<>();
+
+                    for (int peerId : peerSockets.keySet()) {
+                        if (peers.get(peerId).isInterested() && peers.get(peerId).isChoked())
+                            interestedPeers.add(peerId);
+                    }
+
+                    if (!interestedPeers.isEmpty()) {
+                        Random random = new Random();
+                        int randomPeerIndex = random.nextInt(interestedPeers.size());
+                        int randomPeerId = interestedPeers.get(randomPeerIndex);
+                        Messages.sendMessage(peerSockets.get(randomPeerId), Messages.getUnchokeMessage());
+                        peers.get(randomPeerId).setChoked(false);
+                    }
+
+                    Thread.sleep(commonProperties.getOptimisticUnchokingInterval() * 1000L);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -383,13 +404,10 @@ public class PeerProcess {
                                         Messages.sendMessage(socket, Messages.getRequestMessage(requestPieceIndex));
                                 }
                                 double rate = (double) (message.length + 5) / elapsedTime;
-                                if (peers.get(peerId).hasFile()) {
-                                    peers.get(peerId).setDownloadRate(-1);
-                                } else {
-                                    peers.get(peerId).setDownloadRate(rate);
-                                }
+                                peers.get(peerId).setDownloadRate(rate);
+
                                 System.out.println("Downloaded " + thisPeer.getNumberOfPieces()
-                                        + " out of " + numberOfPieces);
+                                        + "/" + numberOfPieces + " pieces");
 
                                 checkIfCompleteFileDownloaded();
                                 for (int peerId : peerSockets.keySet()) {
