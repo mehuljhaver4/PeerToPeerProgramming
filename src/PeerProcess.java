@@ -19,13 +19,12 @@ public class PeerProcess {
     public static void main(String[] args) {
         try {
             thisPeerId = Integer.parseInt(args[0]);
-            System.out.println("This peer - " + thisPeerId);
             peerSockets = new ConcurrentHashMap<>();
 
             //Setup peer specific info
             peers = Configuration.getAllPeersInfo();
 
-            //Create directories if they don't exist
+            //Create directories for to save downloaded file if they don't exist
             for (int peerId : peers.keySet()) {
                 Files.createDirectories(Paths.get("peer_" + peerId));
             }
@@ -39,6 +38,9 @@ public class PeerProcess {
             thisPeer = peers.get(thisPeerId);
             if (thisPeer.hasFile())
                 peersWithCompleteFile += 1;
+
+            //Create log file for this peer
+            LogWriter.startLogger(thisPeerId);
 
             //Starting all threads to start the protocol
             ConnectToPeers connectToPeers = new ConnectToPeers();
@@ -73,6 +75,7 @@ public class PeerProcess {
                     //Writing the handshake on the output stream
                     Socket socket = new Socket(peers.get(peerId).getHostName(), peers.get(peerId).getPortNumber());
                     Messages.sendMessage(socket, handShakeMessage);
+                    System.out.println(LogWriter.makeTCPConnection(peerId));
 
                     //The other peer sends a handshake message which is retrieved here
                     DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
@@ -84,10 +87,10 @@ public class PeerProcess {
                     if (receivedPeerId != peerId)
                         socket.close();
                     else {
+                        System.out.println(LogWriter.madeTCPConnection(peerId));
                         StringBuilder handshakeMsg = new StringBuilder();
                         handshakeMsg.append(new String(Arrays.copyOfRange(inputData, 0, 28)));
                         handshakeMsg.append(receivedPeerId);
-                        System.out.println(handshakeMsg);
                         peerSockets.put(peerId, socket);
                         new ExchangeMessages(socket, peerId).start();
                     }
@@ -115,11 +118,10 @@ public class PeerProcess {
                     int peerId = ByteBuffer.wrap(Arrays.copyOfRange(data, 28, 32)).getInt();
                     handshakeMsg.append(new String(Arrays.copyOfRange(data, 0, 28)));
                     handshakeMsg.append(peerId);
-                    System.out.println(handshakeMsg);
-
+                    System.out.println(LogWriter.madeTCPConnection(peerId));
                     //Sending handshake message to connected peer
                     Messages.sendMessage(socket, handShakeMessage);
-
+                    System.out.println(LogWriter.makeTCPConnection(peerId));
                     new ExchangeMessages(socket, peerId).start();
                     peerSockets.put(peerId, socket);
                 }
@@ -174,7 +176,6 @@ public class PeerProcess {
                             }
                         }
                     }
-                    System.out.println("Preferred neighbors - " + preferredPeers);
                     for (int peerId : preferredPeers) {
                         peers.get(peerId).setChoked(false);
                         Messages.sendMessage(peerSockets.get(peerId), Messages.getUnchokeMessage());
@@ -186,6 +187,8 @@ public class PeerProcess {
                             Messages.sendMessage(peerSockets.get(peerId), Messages.getChokeMessage());
                         }
                     }
+                    if (!preferredPeers.isEmpty())
+                        System.out.println(LogWriter.changePreferredNeighbors(preferredPeers));
 
                     Thread.sleep(commonProperties.getUnchokingInterval() * 1000L);
                 }
@@ -200,6 +203,7 @@ public class PeerProcess {
         public void run() {
             try {
                 while (peersWithCompleteFile < peers.size()) {
+                    int randomPeerId = 0;
                     ArrayList<Integer> interestedPeers = new ArrayList<>();
 
                     for (int peerId : peerSockets.keySet()) {
@@ -210,10 +214,12 @@ public class PeerProcess {
                     if (!interestedPeers.isEmpty()) {
                         Random random = new Random();
                         int randomPeerIndex = random.nextInt(interestedPeers.size());
-                        int randomPeerId = interestedPeers.get(randomPeerIndex);
+                        randomPeerId = interestedPeers.get(randomPeerIndex);
                         Messages.sendMessage(peerSockets.get(randomPeerId), Messages.getUnchokeMessage());
                         peers.get(randomPeerId).setChoked(false);
                     }
+                    if (randomPeerId != 0)
+                        System.out.println(LogWriter.changeOptimisticallyUnchokedNeighbor(randomPeerId));
 
                     Thread.sleep(commonProperties.getOptimisticUnchokingInterval() * 1000L);
                 }
@@ -265,7 +271,7 @@ public class PeerProcess {
                     bufferedOutputStream.write(mergedFile);
                     bufferedOutputStream.close();
                     fileOutputStream.close();
-                    System.out.println("File downloaded");
+                    System.out.println(LogWriter.downloadComplete());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -318,7 +324,7 @@ public class PeerProcess {
                         switch (messageType) {
                             case MessageTypes.CHOKE:
                                 peers.get(peerId).setChoked(true);
-                                System.out.println("Received CHOKE from " + peerId);
+                                System.out.println(LogWriter.choked(peerId));
                                 break;
                             case MessageTypes.UNCHOKE:
                                 peers.get(peerId).setChoked(false);
@@ -327,21 +333,21 @@ public class PeerProcess {
 
                                 if (pieceIndex != -1)
                                     Messages.sendMessage(socket, Messages.getRequestMessage(pieceIndex));
+                                System.out.println(LogWriter.unchoked(peerId));
                                 break;
                             case MessageTypes.INTERESTED:
                                 peers.get(peerId).setInterested(true);
-                                System.out.println("Received INTERESTED from - " + peerId);
+                                System.out.println(LogWriter.receiveInterested(peerId));
                                 break;
                             case MessageTypes.NOTINTERESTED:
-                                System.out.println("Received NOTINTERESTED from " + peerId);
                                 peers.get(peerId).setInterested(false);
                                 if (!peers.get(peerId).isChoked()) {
                                     peers.get(peerId).setChoked(true);
                                     Messages.sendMessage(socket, Messages.getChokeMessage());
                                 }
+                                System.out.println(LogWriter.receiveNotInterested(peerId));
                                 break;
                             case MessageTypes.HAVE:
-                                System.out.println("Received HAVE from " + peerId);
                                 pieceIndex = ByteBuffer.wrap(message).getInt();
                                 peers.get(peerId).updateBitField(pieceIndex);
                                 bits = 0;
@@ -358,6 +364,8 @@ public class PeerProcess {
                                     Messages.sendMessage(socket, Messages.getInterestedMessage());
                                 else
                                     Messages.sendMessage(socket, Messages.getNotInterestedMessage());
+
+                                System.out.println(LogWriter.receiveHave(peerId, pieceIndex));
                                 break;
                             case MessageTypes.BITFIELD:
                                 int[] bitField = new int[message.length / 4];
@@ -366,7 +374,6 @@ public class PeerProcess {
                                     bitField[index] = ByteBuffer.wrap(Arrays.copyOfRange(message, i, i + 4)).getInt();
                                     index++;
                                 }
-                                System.out.println(Arrays.toString(bitField));
                                 peers.get(peerId).setBitField(bitField);
                                 bits = 0;
                                 for (int x : peers.get(peerId).getBitField()) {
@@ -390,12 +397,9 @@ public class PeerProcess {
                                 pieceIndex = ByteBuffer.wrap(message).getInt();
                                 Messages.sendMessage(socket, Messages.getPieceMessage(pieceIndex
                                         , thisPeer.getFilePieces()[pieceIndex]));
-
-                                System.out.println("Received REQUEST from " + peerId + " for piece " + ByteBuffer.wrap(message).getInt());
                                 break;
                             case MessageTypes.PIECE:
                                 pieceIndex = ByteBuffer.wrap(Arrays.copyOfRange(message, 0, 4)).getInt();
-                                System.out.println("Received PIECE" + pieceIndex + " from " + peerId);
                                 index = 0;
                                 thisPeer.getFilePieces()[pieceIndex] = new byte[message.length - 4];
                                 for (int i = 4; i < message.length; i++) {
@@ -414,8 +418,7 @@ public class PeerProcess {
                                 double rate = (double) (message.length + 5) / elapsedTime;
                                 peers.get(peerId).setDownloadRate(rate);
 
-                                System.out.println("Downloaded " + thisPeer.getNumberOfPieces()
-                                        + "/" + numberOfPieces + " pieces");
+                                System.out.println(LogWriter.downloadPiece(peerId, pieceIndex));
 
                                 checkIfCompleteFileDownloaded();
                                 for (int peerId : peerSockets.keySet()) {
