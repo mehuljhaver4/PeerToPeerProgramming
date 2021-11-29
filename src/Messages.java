@@ -13,7 +13,10 @@ public class Messages {
 
         int index;
         switch (type) {
-            case MessageTypes.CHOKE, MessageTypes.UNCHOKE, MessageTypes.INTERESTED, MessageTypes.NOTINTERESTED:
+            case MessageTypes.CHOKE:
+            case MessageTypes.UNCHOKE:
+            case MessageTypes.INTERESTED:
+            case MessageTypes.NOTINTERESTED:
                 finalMessage = new byte[messageLength + 4];
                 index = 0;
                 for (byte b : ByteBuffer.allocate(4).putInt(messageLength).array()) {
@@ -22,7 +25,10 @@ public class Messages {
                 }
                 finalMessage[index] = messageType;
                 break;
-            case MessageTypes.HAVE, MessageTypes.BITFIELD, MessageTypes.REQUEST, MessageTypes.PIECE:
+            case MessageTypes.HAVE:
+            case MessageTypes.BITFIELD:
+            case MessageTypes.REQUEST:
+            case MessageTypes.PIECE:
                 finalMessage = new byte[messageLength + 4];
                 index = 0;
                 for (byte b : ByteBuffer.allocate(4).putInt(messageLength).array()) {
