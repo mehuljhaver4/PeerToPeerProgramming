@@ -32,10 +32,24 @@ public class PeerProcess {
             //Setup common info
             commonProperties = Configuration.getCommonProperties();
             numberOfPieces = commonProperties.getNumberOfPieces();
+            System.out.println("Number Of Preferred Neighbors : " + commonProperties.getPreferredNeighbors());
+            System.out.println("Unchoking Interval : " + commonProperties.getUnchokingInterval() + " seconds");
+            System.out.println("Optimistic Unchoking Interval : " + commonProperties.getOptimisticUnchokingInterval() + " seconds");
+            System.out.println("File Name : " + commonProperties.getFileName());
+            System.out.println("File Size : " + commonProperties.getFileSize());
+            System.out.println("Piece Size : " + commonProperties.getPieceSize());
+            System.out.println("\n");
+
 
             //Setup file specific info for this peer
             Configuration.setThisPeerFileInfo(peers, thisPeerId, commonProperties);
             thisPeer = peers.get(thisPeerId);
+            System.out.println("Peer Id : " + thisPeerId);
+            System.out.println("Host Name : " + thisPeer.getHostName());
+            System.out.println("Port Number : " + thisPeer.getPortNumber());
+            System.out.println("Has Complete File : " + (thisPeer.hasFile() ? "Yes" : "No"));
+            System.out.println("\n");
+
             if (thisPeer.hasFile())
                 peersWithCompleteFile += 1;
 
