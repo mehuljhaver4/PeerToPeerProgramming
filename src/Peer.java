@@ -45,10 +45,6 @@ class Peer {
         this.bitField[index] = 1;
     }
 
-    public int getNumberOfPieces() {
-        return numberOfPieces;
-    }
-
     public void updateNumberOfPieces() {
 
         //Bitfield length is the total number of pieces in the file. If total number of downloaded pieces is equal to

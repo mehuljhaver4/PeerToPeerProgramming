@@ -366,6 +366,8 @@ public class PeerProcess {
                                     Messages.sendMessage(socket, Messages.getNotInterestedMessage());
 
                                 System.out.println(LogWriter.receiveHave(peerId, pieceIndex));
+                                System.out.println((new Date()) + " : Bitfield for peer " + peerId + " updated to "
+                                        + Arrays.toString(peers.get(peerId).getBitField()));
                                 break;
                             case MessageTypes.BITFIELD:
                                 int[] bitField = new int[message.length / 4];
@@ -375,6 +377,8 @@ public class PeerProcess {
                                     index++;
                                 }
                                 peers.get(peerId).setBitField(bitField);
+                                System.out.println((new Date()) + " : Bitfield for peer " + peerId + " updated to "
+                                        + Arrays.toString(bitField));
                                 bits = 0;
                                 for (int x : peers.get(peerId).getBitField()) {
                                     if (x == 1)
@@ -419,6 +423,8 @@ public class PeerProcess {
                                 peers.get(peerId).setDownloadRate(rate);
 
                                 System.out.println(LogWriter.downloadPiece(peerId, pieceIndex));
+                                System.out.println((new Date()) + " : Bitfield for peer " + thisPeerId + " updated to "
+                                        + Arrays.toString(thisPeer.getBitField()));
 
                                 checkIfCompleteFileDownloaded();
                                 for (int peerId : peerSockets.keySet()) {
@@ -427,7 +433,6 @@ public class PeerProcess {
                                 break;
                         }
                     }
-                    Thread.sleep(5000);
                     System.exit(0);
                 } catch (Exception e) {
 //                    e.printStackTrace();
