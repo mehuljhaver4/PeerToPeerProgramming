@@ -13,7 +13,7 @@ public class LogWriter {
             FileOutputStream fileOutputStream = new FileOutputStream("log_peer_" + thisPeerId + ".log");
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(fileOutputStream));
         } catch (FileNotFoundException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
     }
 
@@ -27,7 +27,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -42,7 +42,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -66,7 +66,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return sb.toString();
     }
@@ -81,7 +81,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -96,7 +96,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -111,7 +111,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -126,7 +126,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -141,7 +141,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -156,7 +156,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -173,7 +173,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -188,7 +188,7 @@ public class LogWriter {
             bufferedWriter.newLine();
             bufferedWriter.flush();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
         return s;
     }
@@ -197,7 +197,7 @@ public class LogWriter {
         try {
             bufferedWriter.close();
         } catch (IOException e) {
-            System.err.println(e);
+//            System.err.println(e);
         }
     }
 }

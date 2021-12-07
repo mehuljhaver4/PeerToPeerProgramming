@@ -53,7 +53,7 @@ public class PeerProcess {
             unchokePeers.start();
             optimisticallyUnchokePeers.start();
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
     }
 
@@ -96,7 +96,7 @@ public class PeerProcess {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
     }
@@ -126,7 +126,7 @@ public class PeerProcess {
                     peerSockets.put(peerId, socket);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
     }
@@ -193,7 +193,7 @@ public class PeerProcess {
                     Thread.sleep(commonProperties.getUnchokingInterval() * 1000L);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
     }
@@ -224,7 +224,7 @@ public class PeerProcess {
                     Thread.sleep(commonProperties.getOptimisticUnchokingInterval() * 1000L);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
     }
@@ -273,7 +273,7 @@ public class PeerProcess {
                     fileOutputStream.close();
                     System.out.println(LogWriter.downloadComplete());
                 } catch (Exception e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 }
             }
         }
@@ -430,7 +430,7 @@ public class PeerProcess {
                     Thread.sleep(5000);
                     System.exit(0);
                 } catch (Exception e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 }
             }
         }

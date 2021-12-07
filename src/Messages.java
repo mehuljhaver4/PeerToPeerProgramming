@@ -136,7 +136,7 @@ public class Messages {
             dataOutputStream.write(data);
             dataOutputStream.flush();
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
     }
 }
